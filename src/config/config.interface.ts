@@ -5,6 +5,7 @@ export interface DatabaseConfig {
 export interface AppConfig {
   port: number;
   nodeEnv: string;
+  dataBackend: 'mock' | 'mongo';
   database: DatabaseConfig;
 }
 

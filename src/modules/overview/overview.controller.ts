@@ -7,11 +7,14 @@ export class OverviewController {
 
   @Get()
   async getOverview(
-    @Query('location') location?: string | string[],
-    @Query('from') from?: string | string[],
-    @Query('to') to?: string | string[],
-    @Query('sections') sections?: string | string[],
-  ) {
-    return this.overviewService.getOverview({ location, from, to, sections });
+    @Query('dateRange') dateRange?: string,
+    @Query('location') location?: string,
+    @Query('search') search?: string,
+  ): Promise<any> {
+    return this.overviewService.getOverview({ 
+      dateRange: dateRange || '14d', 
+      location, 
+      search 
+    });
   }
 }
