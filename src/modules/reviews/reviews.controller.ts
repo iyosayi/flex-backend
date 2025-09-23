@@ -1,5 +1,5 @@
 import { Controller, Get, Patch, Param, Body, Query } from '@nestjs/common';
-import { ReviewsService } from './reviews.service';
+import { ReviewsService, ReviewsChartResponse, GuestMentionsResponse, ReviewPerformanceResponse } from './reviews.service';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -90,6 +90,43 @@ export class ReviewsController {
     };
   }
 
+
+  @Get('chart')
+  async getReviewsChart(
+    @Query('dateRange') dateRange = '14d',
+    @Query('location') location?: string,
+    @Query('period') period?: 'monthly' | 'weekly' | 'daily'
+  ): Promise<ReviewsChartResponse> {
+    return this.reviewsService.getReviewsChart({ 
+      dateRange, 
+      location, 
+      period: period || 'monthly' 
+    });
+  }
+
+  @Get('guest-mentions')
+  async getGuestMentions(
+    @Query('dateRange') dateRange = '14d',
+    @Query('location') location?: string,
+    @Query('category') category = 'Cleanliness'
+  ): Promise<GuestMentionsResponse> {
+    return this.reviewsService.getGuestMentions({
+      dateRange,
+      location,
+      category
+    });
+  }
+
+  @Get('performance')
+  async getReviewPerformance(
+    @Query('dateRange') dateRange = '14d',
+    @Query('location') location?: string
+  ): Promise<ReviewPerformanceResponse> {
+    return this.reviewsService.getReviewPerformance({
+      dateRange,
+      location
+    });
+  }
 
   @Patch(':id/status')
   updateStatus(
