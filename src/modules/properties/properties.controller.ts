@@ -30,8 +30,17 @@ export class PropertiesController {
 
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<any> {
-    return this.propertiesService.getPropertyDetail(id);
+  findOne(
+    @Param('id') id: string,
+    @Query('dateRange') dateRange?: string,
+    @Query('status') status?: string,
+    @Query('channel') channel?: string,
+  ): Promise<any> {
+    return this.propertiesService.getPropertyDetail(id, {
+      dateRange,
+      status,
+      channel
+    });
   }
 
 

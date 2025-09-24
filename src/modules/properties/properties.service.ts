@@ -276,21 +276,40 @@ export class PropertiesService {
   }
 
   // Enhanced method for property detail page
-  async getPropertyDetail(id: string): Promise<PropertyDetailResponse> {
+  async getPropertyDetail(
+    id: string, 
+    filters?: {
+      dateRange?: string;
+      status?: string;
+      channel?: string;
+    }
+  ): Promise<PropertyDetailResponse> {
     const property = mockProperties.find(p => p.id === id);
     if (!property) {
       throw new NotFoundException(`Property ${id} not found`);
     }
 
-    // Get reviews for this property from the last 30 days
-    const dateRange = this.parseDateRange('30d');
+    // Get reviews for this property with optional filtering
+    const dateRange = this.parseDateRange(filters?.dateRange || '30d');
     const latestReviews = this.getLatestReviews();
-    const propertyReviews = this.filterReviewsByDateRange(
-      latestReviews.filter(review => review.listingName === property.name),
-      dateRange
-    );
+    let propertyReviews = latestReviews.filter(review => review.listingName === property.name);
 
-    // Get all reviews for this property (for calculations)
+    // Apply status filter
+    if (filters?.status && filters.status !== 'all') {
+      propertyReviews = propertyReviews.filter(review => review.status === filters.status);
+    }
+
+    // Apply channel filter
+    if (filters?.channel && filters.channel !== 'all') {
+      propertyReviews = propertyReviews.filter(review => 
+        review.channel.toLowerCase() === filters.channel.toLowerCase()
+      );
+    }
+
+    // Apply date range filter
+    propertyReviews = this.filterReviewsByDateRange(propertyReviews, dateRange);
+
+    // Get all reviews for this property (for calculations) - without filters
     const allPropertyReviews = latestReviews.filter(review => review.listingName === property.name);
 
     return {

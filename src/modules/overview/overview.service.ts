@@ -289,7 +289,7 @@ export class OverviewService {
   private getRecentReviews(reviews: any[]): RecentReview[] {
     return reviews
       .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
-      .slice(0, 10)
+      .slice(0, 4)
       .map(review => {
         const property = mockProperties.find(p => p.name === review.listingName);
         return {

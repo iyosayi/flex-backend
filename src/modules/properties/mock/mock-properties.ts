@@ -31,8 +31,8 @@ export const mockProperties: MockProperty[] = [
   {
     id: '66f1abc1234567890abc1001',
     name: 'Deluxe 2 Bed Flat with Balcony in Hackney',
-    city: 'Paris',
-    country: 'France',
+    city: 'London',
+    country: 'United Kingdom',
     imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center',
     avgRating: 4.8,
     totalReviews: 1240,
