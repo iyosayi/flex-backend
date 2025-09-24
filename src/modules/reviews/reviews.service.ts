@@ -946,6 +946,94 @@ export class ReviewsService implements OnModuleInit {
     return { topLocation, worstLocation };
   }
 
+  async getDynamicReviews(query: {
+    page?: string;
+    limit?: string;
+    status?: string;
+    channel?: string;
+    propertyName?: string;
+    defaultToPublishedOnly?: boolean;
+  }) {
+    const allReviews = this.findAll();
+    
+    // Apply property name filter if provided
+    let filteredReviews = allReviews;
+    if (query.propertyName) {
+      filteredReviews = filteredReviews.filter(review => 
+        review.listingName.toLowerCase().includes(query.propertyName.toLowerCase())
+      );
+    }
+    
+    // Apply status filter
+    if (query.status && query.status !== 'all') {
+      filteredReviews = filteredReviews.filter(review => review.status === query.status);
+    } else if (query.defaultToPublishedOnly) {
+      // Default to only published reviews for backward compatibility (hostaway endpoint)
+      filteredReviews = filteredReviews.filter(review => review.status === 'published');
+    }
+    // No default filtering - show all reviews by default for main endpoint
+    
+    // Apply channel filter
+    if (query.channel && query.channel !== 'all') {
+      filteredReviews = filteredReviews.filter(review => 
+        review.channel.toLowerCase() === query.channel.toLowerCase()
+      );
+    }
+    
+    // Sort by publishedAt timestamp for published reviews, or submittedAt for others
+    filteredReviews.sort((a, b) => {
+      if (a.status === 'published' && b.status === 'published') {
+        const aTime = (a as any).publishedAt || a.submittedAt;
+        const bTime = (b as any).publishedAt || b.submittedAt;
+        return new Date(bTime).getTime() - new Date(aTime).getTime(); // Most recent first
+      }
+      // For non-published reviews, sort by submittedAt
+      return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+    });
+    
+    // Calculate pagination
+    const pageNumber = Math.max(1, Number(query.page) || 1);
+    const limitNumber = Math.max(1, Math.min(100, Number(query.limit) || 50)); // Max 100 items per page
+    const offset = (pageNumber - 1) * limitNumber;
+    const total = filteredReviews.length;
+    const totalPages = Math.ceil(total / limitNumber);
+    
+    // Get paginated results
+    const paginatedReviews = filteredReviews.slice(offset, offset + limitNumber);
+    
+    // Transform to match API format
+    const transformedReviews = paginatedReviews.map(review => ({
+      id: review.id,
+      type: 'guest-to-host',
+      status: review.status,
+      rating: parseFloat(review.rating.toFixed(2)),
+      publicReview: review.publicReview,
+      reviewCategory: review.reviewCategory.map((category) => ({
+        category: category.category,
+        rating: parseFloat((category.rating as number).toFixed(2))
+      })),
+      submittedAt: review.submittedAt,
+      publishedAt: (review as any).publishedAt || null,
+      guestName: review.guestName,
+      listingName: review.listingName,
+      channel: review.channel,
+    }));
+
+    return {
+      data: transformedReviews,
+      meta: {
+        pagination: {
+          page: pageNumber,
+          limit: limitNumber,
+          total,
+          totalPages,
+          hasNext: pageNumber < totalPages,
+          hasPrev: pageNumber > 1,
+        }
+      }
+    };
+  }
+
   private getPeriodDescription(dateRange: string): string {
     const periodMap: Record<string, string> = {
       '7d': 'last 7 days',
